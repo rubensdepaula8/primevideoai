@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProVideo - Criador de Vídeos Profissional</title>
+    <title>PrimeVideo IA - Criador de Vídeos com Inteligência Artificial</title>
     <style>
         * {
             margin: 0;
@@ -695,7 +695,7 @@
 <body>
     <div class="header">
         <div class="logo">
-            🎬 ProVideo - Criador de Vídeos
+            🎬 PrimeVideo IA - Criador de Vídeos com IA
         </div>
         <div class="header-buttons">
             <button class="theme-toggle" id="themeToggle">🌙 Dark</button>
@@ -705,19 +705,52 @@
     <div class="main-container">
         <!-- GRAVADOR -->
         <div class="container">
-            <h1>Gravador de Vídeo</h1>
-            <p class="subtitle">Canvas API + MediaRecorder + Áudio</p>
-
-            <div class="status idle" id="status"></div>
-            <div class="timer hidden" id="timer">00:00</div>
+            <h1>🤖 Gerador de Narração com IA</h1>
+            <p class="subtitle">Descreva seu vídeo e a IA cria a narração</p>
 
             <div class="info-box">
-                <p><strong>ℹ️ Como usar:</strong></p>
-                <p>1. Configure qualidade e temas</p>
-                <p>2. Clique em "Iniciar Gravação"</p>
-                <p>3. Fale sua narração</p>
-                <p>4. Clique em "Parar"</p>
+                <p><strong>ℹ️ Como funciona:</strong></p>
+                <p>1. Digite o texto/roteiro do seu vídeo</p>
+                <p>2. Clique em "Gerar Narração com IA"</p>
+                <p>3. Ouça a narração gerada</p>
+                <p>4. Gravamos vídeo + áudio automaticamente</p>
             </div>
+
+            <!-- GERADOR DE NARRAÇÃO -->
+            <div class="settings-panel" style="margin-bottom: 20px;">
+                <div class="setting-group">
+                    <div class="setting-label">📝 Seu Roteiro/Prompt</div>
+                    <textarea id="promptText" class="prompt-textarea" placeholder="Digite aqui o que você quer que a IA narize. Ex: Olá, bem-vindo ao meu canal. Hoje vou te ensinar..." style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #3a3e47; background: #1a1e27; color: #ccc; font-size: 14px; font-family: Arial; resize: vertical;"></textarea>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">🎙️ Escolha a Voz</div>
+                    <select id="voiceSelect" class="select-input">
+                        <option value="pt-BR-female">🎀 Feminina (Padrão)</option>
+                        <option value="pt-BR-male">🎤 Masculina</option>
+                        <option value="en-US-female">🎀 English Female</option>
+                        <option value="en-US-male">🎤 English Male</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <div class="setting-label">🔊 Velocidade da Narração</div>
+                    <input type="range" id="speechRateSlider" min="0.5" max="2" value="1" step="0.1">
+                    <div class="setting-value">Velocidade: <span id="speechRateValue">1x</span></div>
+                </div>
+
+                <button class="btn-start" id="generateNarrationBtn" style="width: 100%; margin-top: 15px;">🤖 Gerar Narração com IA</button>
+            </div>
+
+            <!-- PLAYER DE NARRAÇÃO -->
+            <div class="settings-panel" style="margin-bottom: 20px;">
+                <div class="setting-label">🎧 Preview da Narração</div>
+                <audio id="narrationAudio" controls style="width: 100%; margin-bottom: 10px;"></audio>
+                <button class="btn-secondary" id="useNarrationBtn" style="width: 100%; margin-bottom: 10px;" disabled>✅ Usar Esta Narração</button>
+                <div id="narrationStatus" style="font-size: 12px; color: #888; text-align: center;"></div>
+            </div>
+
+            <h2 style="margin-top: 30px;">📹 Gravador de Vídeo</h2>
 
             <div class="preview-section">
                 <canvas id="canvas" width="400" height="300"></canvas>
@@ -834,6 +867,16 @@
         const themeSelect = document.getElementById('themeSelect');
         const galleryContainer = document.getElementById('galleryContainer');
         const galleryCount = document.getElementById('galleryCount');
+        
+        // NOVOS ELEMENTOS PARA IA
+        const promptText = document.getElementById('promptText');
+        const generateNarrationBtn = document.getElementById('generateNarrationBtn');
+        const narrationAudio = document.getElementById('narrationAudio');
+        const useNarrationBtn = document.getElementById('useNarrationBtn');
+        const narrationStatus = document.getElementById('narrationStatus');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const speechRateSlider = document.getElementById('speechRateSlider');
+        const speechRateValue = document.getElementById('speechRateValue');
 
         let mediaRecorder;
         let audioContext;
@@ -847,8 +890,110 @@
         let currentTheme = 'animated';
         let currentFps = 30;
         let currentBitrate = 2500000;
+        let generatedAudio = null; // Armazenar o áudio gerado
+        let isUsingAI = false; // Flag para usar narração da IA
+        let aiAudioBlob = null; // Guardar blob do áudio gerado
 
-        // TEMA ESCURO/CLARO
+        // GERAR NARRAÇÃO COM IA USANDO WEB SPEECH API
+        generateNarrationBtn.addEventListener('click', async () => {
+            if (!promptText.value.trim()) {
+                alert('Por favor, digite um texto para gerar a narração!');
+                return;
+            }
+
+            narrationStatus.textContent = '🔄 Gerando narração com IA...';
+            generateNarrationBtn.disabled = true;
+
+            try {
+                const utterance = new SpeechSynthesisUtterance(promptText.value);
+                
+                // Configurar voz baseado na seleção
+                const voiceValue = voiceSelect.value;
+                const voices = window.speechSynthesis.getVoices();
+                
+                let selectedVoice = null;
+                if (voiceValue.includes('pt-BR')) {
+                    selectedVoice = voices.find(v => v.lang === 'pt-BR' || v.lang.includes('pt'));
+                } else if (voiceValue.includes('en-US')) {
+                    selectedVoice = voices.find(v => v.lang === 'en-US' || v.lang.includes('en'));
+                }
+                
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                
+                utterance.lang = voiceValue.includes('en-US') ? 'en-US' : 'pt-BR';
+                utterance.rate = parseFloat(speechRateSlider.value);
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+
+                // Usar Media Recorder para capturar o áudio da síntese
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const destination = audioContext.createMediaStreamDestination();
+                
+                // Conectar o synth ao audio context
+                const synth = window.speechSynthesis;
+                
+                // Usando Web Audio API para capturar
+                const mediaStream = destination.stream;
+                const mediaRecorderAI = new MediaRecorder(mediaStream);
+                const audioChunks = [];
+
+                mediaRecorderAI.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorderAI.onstop = () => {
+                    aiAudioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioUrl = URL.createObjectURL(aiAudioBlob);
+                    narrationAudio.src = audioUrl;
+                    generatedAudio = aiAudioBlob;
+                    
+                    narrationStatus.textContent = '✅ Narração gerada com sucesso!';
+                    useNarrationBtn.disabled = false;
+                };
+
+                mediaRecorderAI.start();
+                synth.speak(utterance);
+
+                // Aguardar fim da fala
+                await new Promise((resolve) => {
+                    utterance.onend = () => {
+                        setTimeout(() => {
+                            mediaRecorderAI.stop();
+                            resolve();
+                        }, 500);
+                    };
+                });
+
+            } catch (error) {
+                console.error('Erro ao gerar narração:', error);
+                narrationStatus.textContent = '❌ Erro ao gerar narração. Tente novamente.';
+            } finally {
+                generateNarrationBtn.disabled = false;
+            }
+        });
+
+        // Atualizar velocidade em tempo real
+        speechRateSlider.addEventListener('input', (e) => {
+            speechRateValue.textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+        });
+
+        // USAR NARRAÇÃO GERADA
+        useNarrationBtn.addEventListener('click', () => {
+            isUsingAI = true;
+            narrationStatus.textContent = '✅ Narração selecionada! Clique em "Iniciar" para gravar com este áudio.';
+            useNarrationBtn.disabled = true;
+            useNarrationBtn.style.opacity = '0.5';
+        });
+
+        // Carregar vozes quando estiverem disponíveis
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => {
+                // Vozes carregadas
+            };
+        }
+
         function toggleTheme() {
             document.body.classList.toggle('light-theme');
             const isDark = !document.body.classList.contains('light-theme');
@@ -1262,20 +1407,31 @@
         // INICIAR GRAVAÇÃO
         startBtn.addEventListener('click', async () => {
             try {
+                // Verificar se foi usada narração de IA
+                if (!isUsingAI || !aiAudioBlob) {
+                    alert('⚠️ Por favor, gere a narração com IA primeiro!');
+                    return;
+                }
+
                 recordedChunks = [];
                 startTime = Date.now();
                 animationFrame = 0;
                 timer.classList.remove('hidden');
 
-                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Usar o áudio gerado pela IA
+                const audioBuffer = aiAudioBlob;
+                const audioUrl = URL.createObjectURL(audioBuffer);
+                const audioElement = new Audio(audioUrl);
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioSource = audioContext.createMediaElementAudioSource(audioElement);
+                const dest = audioContext.createMediaStreamDestination();
+                audioSource.connect(dest);
+                audioSource.connect(audioContext.destination); // Também ouvir
 
                 const canvasStream = canvas.captureStream(currentFps);
 
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const audioSource = audioContext.createMediaStreamSource(mediaStream);
-                const dest = audioContext.createMediaStreamDestination();
-                audioSource.connect(dest);
-
+                // Combinar vídeo do canvas + áudio gerado
                 const combinedStream = new MediaStream();
                 canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
                 dest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
@@ -1295,6 +1451,10 @@
                 };
 
                 mediaRecorder.start();
+                
+                // Sincronizar áudio com a gravação
+                audioElement.play();
+
                 startBtn.disabled = true;
                 stopBtn.disabled = false;
                 drawBtn.disabled = true;
@@ -1302,16 +1462,29 @@
                 themeSelect.disabled = true;
                 fpsSelect.disabled = true;
                 qualitySlider.disabled = true;
+                generateNarrationBtn.disabled = true;
+                voiceSelect.disabled = true;
+                speechRateSlider.disabled = true;
+                promptText.disabled = true;
 
-                status.textContent = '🔴 GRAVANDO...';
+                status.textContent = '🔴 GRAVANDO COM NARRAÇÃO DA IA...';
                 status.className = 'status recording';
-                progress.textContent = 'Gravação em andamento...';
+                progress.textContent = 'Gravação em andamento com áudio gerado...';
 
                 timerInterval = setInterval(updateTimer, 1000);
                 animate();
+
+                // Parar automaticamente quando o áudio terminar
+                audioElement.onended = () => {
+                    setTimeout(() => {
+                        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                            stopBtn.click();
+                        }
+                    }, 500);
+                };
             } catch (err) {
                 console.error('Erro:', err);
-                alert('Erro: Permissão de áudio negada');
+                alert('Erro ao iniciar gravação: ' + err.message);
             }
         });
 
@@ -1321,7 +1494,9 @@
             cancelAnimationFrame(animationId);
             clearInterval(timerInterval);
 
-            mediaStream.getTracks().forEach(track => track.stop());
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+            }
             if (audioContext) audioContext.close();
 
             startBtn.disabled = false;
@@ -1332,6 +1507,10 @@
             themeSelect.disabled = false;
             fpsSelect.disabled = false;
             qualitySlider.disabled = false;
+            generateNarrationBtn.disabled = false;
+            voiceSelect.disabled = false;
+            speechRateSlider.disabled = false;
+            promptText.disabled = false;
 
             status.textContent = '✅ Gravação Concluída!';
             status.className = 'status ready';
@@ -1385,6 +1564,67 @@
 
         // DESENHO INICIAL
         drawClear();
+
+        // ===== FLUXO AUTOMÁTICO =====
+        // Detectar parâmetros de URL para gerar vídeo automaticamente
+        function initializeAutoGeneration() {
+            const params = new URLSearchParams(window.location.search);
+            const roteiro = params.get('roteiro');
+            const tema = params.get('tema');
+            const autoGenerate = params.get('autoGenerate');
+
+            if (autoGenerate === 'true' && roteiro) {
+                console.log('🤖 Iniciando geração automática de vídeo...');
+                
+                // 1. Popular o campo de texto com o roteiro
+                promptText.value = roteiro;
+                progress.textContent = '⏳ Preparando geração automática...';
+
+                // 2. Selecionar o tema
+                if (tema) {
+                    themeSelect.value = tema;
+                    currentTheme = tema;
+                }
+
+                // 3. Aguardar um pouco e depois gerar narração
+                setTimeout(() => {
+                    console.log('🎙️ Gerando narração automaticamente...');
+                    generateNarrationBtn.click();
+                    
+                    // 4. Esperar a narração ser gerada e usar automaticamente
+                    const checkNarrationInterval = setInterval(() => {
+                        if (aiAudioBlob && isUsingAI === false) {
+                            console.log('✅ Narração gerada! Usando automaticamente...');
+                            clearInterval(checkNarrationInterval);
+                            setTimeout(() => {
+                                useNarrationBtn.click();
+                                
+                                // 5. Esperar a narração ser confirmada e iniciar gravação
+                                setTimeout(() => {
+                                    if (isUsingAI && aiAudioBlob) {
+                                        console.log('🎬 Iniciando gravação automática...');
+                                        startBtn.click();
+                                        progress.textContent = '🎥 Vídeo sendo gerado automaticamente...';
+                                    }
+                                }, 500);
+                            }, 300);
+                        }
+                    }, 500);
+
+                    // Timeout de segurança (30 segundos)
+                    setTimeout(() => {
+                        clearInterval(checkNarrationInterval);
+                    }, 30000);
+                }, 800);
+            }
+        }
+
+        // Iniciar processo automático assim que o documento carregar
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAutoGeneration);
+        } else {
+            initializeAutoGeneration();
+        }
     </script>
 </body>
 </html>

@@ -662,6 +662,7 @@
                     <option value="wave">〰️ Onda</option>
                     <option value="minimal">◆ Minimalista</option>
                 </select>
+                <button class="btn-primary" onclick="autoGerarVideo()" style="background: linear-gradient(135deg, #00D084, #00A36F); margin-bottom: 10px;">✨ GERAR VÍDEO COMPLETO</button>
                 <button class="btn-primary" onclick="launchVideoStudio()">🎬 Ir para Estúdio de Vídeo</button>
             </div>
 
@@ -1162,6 +1163,19 @@ Cuide do seu corpo, ele é seu melhor ativo! 🫀`
                 roteiro: appState.generatedResult.roteiro,
                 categoria: appState.generatedResult.category,
                 duracao: appState.generatedResult.duration
+            });
+            window.location.href = 'canvas-video-recorder.html?' + params.toString();
+        }
+
+        function autoGerarVideo() {
+            // Gerar vídeo completamente automático
+            const theme = document.getElementById('themeSelect').value;
+            const params = new URLSearchParams({
+                roteiro: appState.generatedResult.roteiro,
+                categoria: appState.generatedResult.category,
+                duracao: appState.generatedResult.duration,
+                tema: theme,
+                autoGenerate: 'true'
             });
             window.location.href = 'canvas-video-recorder.html?' + params.toString();
         }
