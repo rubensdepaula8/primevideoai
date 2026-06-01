@@ -430,17 +430,29 @@
                     // Stream do canvas
                     const canvasStream = canvas.captureStream(fps);
                     
-                    // Adicionar áudio ao stream
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    const audioElement = new Audio(URL.createObjectURL(audioBlob));
-                    const audioSource = audioContext.createMediaElementAudioSource(audioElement);
-                    const dest = audioContext.createMediaStreamDestination();
-                    audioSource.connect(dest);
+                    // Preparar áudio
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    
+                    // Usar API simples se disponível, senão usar fallback
+                    let audioTrack = null;
+                    try {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const audioElement = new Audio(audioUrl);
+                        
+                        if (audioContext.createMediaElementAudioSource) {
+                            const audioSource = audioContext.createMediaElementAudioSource(audioElement);
+                            const dest = audioContext.createMediaStreamDestination();
+                            audioSource.connect(dest);
+                            audioTrack = dest.stream.getAudioTracks()[0];
+                        }
+                    } catch (e) {
+                        console.log('Audio context não disponível, usando vídeo apenas');
+                    }
 
                     // Combinar vídeo + áudio
                     const combinedStream = new MediaStream();
                     canvasStream.getVideoTracks().forEach(track => combinedStream.addTrack(track));
-                    dest.stream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+                    if (audioTrack) combinedStream.addTrack(audioTrack);
 
                     // Recorder
                     const mediaRecorder = new MediaRecorder(combinedStream, {
@@ -468,12 +480,10 @@
                             requestAnimationFrame(drawFrame);
                         } else {
                             mediaRecorder.stop();
-                            audioElement.pause();
                         }
                     };
 
                     mediaRecorder.start();
-                    audioElement.play();
                     drawFrame();
 
                 } catch (error) {
