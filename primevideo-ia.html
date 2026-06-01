@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrimeVideo IA - Criador de Vídeos com Inteligência Artificial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            background: #080B1A;
+            font-family: 'Rajdhani', sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0F1330; }
+        ::-webkit-scrollbar-thumb { background: #3D2E9E; border-radius: 3px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-glow { 
+            0%, 100% { box-shadow: 0 0 20px #7B61FF55; } 
+            50% { box-shadow: 0 0 40px #7B61FFaa; } 
+        }
+        @keyframes float { 
+            0%, 100% { transform: translateY(0px); } 
+            50% { transform: translateY(-8px); } 
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .float-anim { animation: float 3s ease-in-out infinite; }
+        .spin { animation: spin 1s linear infinite; }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: #080B1A;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* BOTÕES */
+        .btn-primary {
+            background: linear-gradient(135deg, #7B61FF, #5B40E0);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-primary:hover { filter: brightness(1.15); transform: translateY(-2px); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 1.5px solid #3A3060;
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-secondary:hover { border-color: #7B61FF; background: #1A154820; }
+
+        .chip {
+            background: #1A1548;
+            border: 1.5px solid #2A2060;
+            border-radius: 20px;
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #8878C0;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .chip.active {
+            background: #7B61FF;
+            border-color: #7B61FF;
+            color: white;
+            box-shadow: 0 0 12px #7B61FF66;
+        }
+        .chip:hover { border-color: #7B61FF; }
+
+        .card {
+            background: #0F1330;
+            border: 1px solid #2A2060;
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        /* SCREENS */
+        .screen { display: none; padding: 56px 20px 100px; }
+        .screen.active { display: block; }
+
+        /* LOGIN */
+        #loginScreen {
+            display: flex !important;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            gap: 32px;
+            padding: 40px 32px;
+        }
+
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, #A78BFF, #3D2E9E);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            box-shadow: 0 0 30px #7B61FF55;
+        }
+
+        .title-section h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .title-section .highlight { color: #7B61FF; }
+        .title-section p { 
+            font-size: 14px;
+            color: #8878C0;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 260px;
+        }
+
+        .login-buttons { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; }
+
+        .divider { display: flex; align-items: center; gap: 12px; }
+        .divider-line { flex: 1; height: 1px; background: #2A2060; }
+        .divider-text { font-size: 12px; color: #3A3060; }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            position: sticky;
+            top: 0;
+            background: #080B1A;
+            padding: 20px 0;
+            z-index: 50;
+        }
+
+        .header h2 { font-family: 'Orbitron', sans-serif; font-size: 18px; }
+        .header-back { cursor: pointer; font-size: 20px; }
+
+        /* CREDIT BADGE */
+        .credit-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #1A1548;
+            border: 1px solid #3D2E9E;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: #7B61FF;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            margin-top: 20px;
+        }
+
+        /* INPUTS */
+        input, textarea, select {
+            background: #111428;
+            border: 1.5px solid #2A2060;
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 12px;
+        }
+        input:focus, textarea:focus, select:focus { border-color: #7B61FF; }
+        textarea { resize: vertical; min-height: 80px; }
+
+        /* GRID */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: #0A0D24;
+            border-top: 1px solid #2A2060;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 20px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+        }
+
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 12px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            flex: 1;
+            color: #3A3060;
+        }
+        .nav-tab.active { color: #7B61FF; }
+        .nav-icon { font-size: 20px; }
+        .nav-label { font-size: 10px; font-weight: 600; }
+
+        .nav-fab {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #7B61FF, #5B40E0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-top: -25px;
+            box-shadow: 0 0 20px #7B61FF88;
+        }
+
+        /* PROJECT CARD */
+        .project-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #0F1330;
+            border: 1px solid #2A2060;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+        .project-card:hover { border-color: #7B61FF44; background: #111428; }
+
+        .project-emoji {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .project-info { flex: 1; min-width: 0; }
+        .project-title { font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; }
+        .project-meta { font-size: 11px; color: #8878C0; margin-top: 4px; }
+
+        /* CATEGORY GRID */
+        .category-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .category-item {
+            background: #0F1330;
+            border: 1.5px solid #2A2060;
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .category-item:hover { border-color: #7B61FF; background: #111428; }
+        .category-item.selected { 
+            background: #7B61FF;
+            border-color: #7B61FF;
+            box-shadow: 0 0 20px #7B61FF55;
+        }
+        .category-item-emoji { font-size: 28px; margin-bottom: 8px; }
+        .category-item-name { font-size: 13px; font-weight: 700; }
+
+        /* SLIDER */
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #1A1060;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin-bottom: 12px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #7B61FF;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #7B61FF;
+            cursor: pointer;
+            border: none;
+        }
+
+        /* LOADING */
+        .loading-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            min-height: 100vh;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #2A2060;
+            border-top-color: #7B61FF;
+            border-radius: 50%;
+        }
+
+        /* RESULT */
+        .result-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #2A2060;
+            padding-bottom: 12px;
+        }
+
+        .result-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            color: #8878C0;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .result-tab.active {
+            color: #7B61FF;
+            background: #1A1548;
+        }
+
+        .result-content { display: none; }
+        .result-content.active { display: block; }
+
+        .roteiro-box {
+            background: #111428;
+            border: 1px solid #2A2060;
+            border-radius: 12px;
+            padding: 16px;
+            line-height: 1.6;
+            font-size: 14px;
+            color: #C0B0FF;
+            margin-bottom: 16px;
+        }
+
+        /* STEP INDICATOR */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            flex: 1;
+            height: 4px;
+            background: #1A1060;
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+        .step.active, .step.completed { background: #7B61FF; }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(8, 11, 26, 0.95);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: #0F1330;
+            border: 1px solid #2A2060;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="screen active fade-in">
+            <div class="logo float-anim">
+                🎬
+            </div>
+
+            <div class="title-section">
+                <h1>PrimeVideo <span class="highlight">IA</span></h1>
+                <p>Transforme ideias em vídeos virais com Inteligência Artificial.</p>
+            </div>
+
+            <div class="login-buttons">
+                <button class="btn-primary" onclick="loginWithGoogle()" style="background: white; color: #111; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Entrar com Google
+                </button>
+
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <div class="divider-text">ou</div>
+                    <div class="divider-line"></div>
+                </div>
+
+                <button class="btn-secondary" onclick="loginAsVisitor()">Continuar como visitante</button>
+            </div>
+
+            <p style="font-size: 11px; color: #3A3060; text-align: center;">
+                Ao continuar, você concorda com nossos <span style="color: #7B61FF; cursor: pointer;">Termos de Uso</span> e <span style="color: #7B61FF; cursor: pointer;">Política de Privacidade</span>.
+            </p>
+        </div>
+
+        <!-- HOME SCREEN -->
+        <div id="homeScreen" class="screen fade-in">
+            <div class="header">
+                <div>
+                    <p style="font-size: 13px; color: #8878C0; margin-bottom: 4px;">Olá, <strong style="color: #C0B0FF;" id="userName">Usuário</strong>! 👋</p>
+                    <h2>Bem-vindo de volta</h2>
+                </div>
+                <div style="position: relative;">
+                    <div style="width: 38px; height: 38px; border-radius: 50%; background: #1A1548; border: 1.5px solid #3D2E9E; display: flex; align-items: center; justify-content: center; font-size: 18px;">🔔</div>
+                    <div style="position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #7B61FF;"></div>
+                </div>
+            </div>
+
+            <div class="card pulse-glow" style="background: linear-gradient(135deg, #1A1548, #0F1330); border: 1px solid #3D2E9E; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="font-size: 12px; color: #8878C0; margin-bottom: 4px;">Seus Créditos</p>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 24px;">💎</span>
+                            <span style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900;" id="creditsDisplay">10</span>
+                        </div>
+                        <p style="font-size: 11px; color: #8878C0; margin-top: 2px;">créditos disponíveis</p>
+                    </div>
+                    <div style="font-size: 48px; opacity: 0.5;">💰</div>
+                </div>
+                <button class="btn-primary" onclick="switchScreen('creditsScreen')" style="margin-top: 12px; padding: 10px 16px; font-size: 13px;">💎 Comprar Créditos</button>
+            </div>
+
+            <p class="section-title">Ações rápidas</p>
+            <div class="grid-2" style="margin-bottom: 24px;">
+                <div class="card" onclick="switchScreen('createScreen')" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 22px; margin-bottom: 8px;">✦</div>
+                    <p style="font-weight: 700; font-size: 14px;">Criar Projeto</p>
+                    <p style="font-size: 11px; color: #8878C0; margin-top: 4px;">Novo vídeo com IA</p>
+                </div>
+                <div class="card" onclick="switchScreen('projectsScreen')" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 22px; margin-bottom: 8px;">◫</div>
+                    <p style="font-weight: 700; font-size: 14px;">Meus Projetos</p>
+                    <p style="font-size: 11px; color: #8878C0; margin-top: 4px;">Ver todos</p>
+                </div>
+                <div class="card" onclick="switchScreen('creditsScreen')" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 22px; margin-bottom: 8px;">💎</div>
+                    <p style="font-weight: 700; font-size: 14px;">Comprar Créditos</p>
+                    <p style="font-size: 11px; color: #8878C0; margin-top: 4px;">Adquira mais</p>
+                </div>
+                <div class="card" onclick="switchScreen('profileScreen')" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 22px; margin-bottom: 8px;">⚙</div>
+                    <p style="font-weight: 700; font-size: 14px;">Configurações</p>
+                    <p style="font-size: 11px; color: #8878C0; margin-top: 4px;">Ajustes e idioma</p>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <p class="section-title" style="margin-bottom: 0; margin-top: 0;">Últimos projetos</p>
+                <span onclick="switchScreen('projectsScreen')" style="font-size: 12px; color: #7B61FF; cursor: pointer;">Ver todos</span>
+            </div>
+            <div id="recentProjects"></div>
+        </div>
+
+        <!-- CREATE SCREEN -->
+        <div id="createScreen" class="screen fade-in">
+            <div class="header">
+                <span class="header-back" onclick="switchScreen('homeScreen')">←</span>
+                <h2>Criar Projeto</h2>
+                <div class="credit-badge">💎 <span id="createCredits">10</span></div>
+            </div>
+
+            <p style="color: #8878C0; margin-bottom: 20px; font-size: 13px;">Preencha os detalhes abaixo para a IA criar um vídeo incrível para você.</p>
+
+            <p class="section-title">1. CATEGORIA</p>
+            <div class="category-grid" id="categoryGrid"></div>
+
+            <p class="section-title">2. PLATAFORMA</p>
+            <div class="grid-3" style="margin-bottom: 20px;">
+                <div class="chip" data-platform="Shorts" onclick="selectPlatform(this)" style="text-align: center; padding: 16px 8px;">📱 Shorts</div>
+                <div class="chip" data-platform="TikTok" onclick="selectPlatform(this)" style="text-align: center; padding: 16px 8px;">🎵 TikTok</div>
+                <div class="chip" data-platform="Reels" onclick="selectPlatform(this)" style="text-align: center; padding: 16px 8px;">📷 Reels</div>
+            </div>
+
+            <p class="section-title">3. DURAÇÃO</p>
+            <div class="grid-3" style="margin-bottom: 20px;">
+                <div class="chip" data-duration="30" onclick="selectDuration(this)" style="text-align: center; padding: 12px 8px;">30s</div>
+                <div class="chip" data-duration="45" onclick="selectDuration(this)" style="text-align: center; padding: 12px 8px;">45s</div>
+                <div class="chip" data-duration="60" onclick="selectDuration(this)" style="text-align: center; padding: 12px 8px;">60s</div>
+            </div>
+
+            <p class="section-title">4. IDIOMA</p>
+            <div class="grid-2" style="margin-bottom: 20px;">
+                <div class="chip" data-lang="pt-BR" onclick="selectLang(this)" style="text-align: center; padding: 12px 8px;">🇧🇷 Português</div>
+                <div class="chip" data-lang="en-US" onclick="selectLang(this)" style="text-align: center; padding: 12px 8px;">🇺🇸 English</div>
+            </div>
+
+            <p class="section-title">5. NÍVEL DE CRIATIVIDADE</p>
+            <div style="margin-bottom: 20px;">
+                <input type="range" id="creativitySlider" min="20" max="100" value="60" oninput="updateCreativity(this.value)">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; color: #8878C0;">
+                    <span>Equilibrado</span>
+                    <span id="creativityLabel">Criativo</span>
+                    <span>Muito Criativo</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="generateProject()" style="margin-bottom: 20px;">🚀 GERAR PROJETO</button>
+            <p style="text-align: center; font-size: 12px; color: #8878C0;">1 crédito será utilizado</p>
+        </div>
+
+        <!-- LOADING SCREEN -->
+        <div id="loadingScreen" class="screen fade-in">
+            <div class="loading-screen">
+                <div class="loading-spinner spin"></div>
+                <p style="font-size: 16px; font-weight: 700;">Gerando seu projeto...</p>
+                <p style="font-size: 13px; color: #8878C0; text-align: center;">A IA está criando um roteiro personalizado conforme sua categoria e preferências.</p>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="resultScreen" class="screen fade-in">
+            <div class="header">
+                <span class="header-back" onclick="switchScreen('homeScreen')">←</span>
+                <h2>Resultado do Projeto</h2>
+                <div class="credit-badge">✅ 1 usado</div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 40px; margin-bottom: 8px;" id="resultEmoji">🌍</div>
+                <p style="font-weight: 700; font-size: 16px;" id="resultTitle">Projeto Gerado</p>
+                <p style="font-size: 12px; color: #8878C0; margin-top: 4px;" id="resultCategory">Categoria</p>
+            </div>
+
+            <div class="result-tabs">
+                <button class="result-tab active" onclick="switchResultTab('roteiro')">Roteiro</button>
+                <button class="result-tab" onclick="switchResultTab('naracao')">Narração</button>
+                <button class="result-tab" onclick="switchResultTab('canvas')">Canvas</button>
+            </div>
+
+            <div id="roteiroTab" class="result-content active">
+                <div class="roteiro-box" id="roteiroContent"></div>
+                <button class="btn-secondary" onclick="copyToClipboard()">📋 Copiar Roteiro</button>
+            </div>
+
+            <div id="naracaoTab" class="result-content">
+                <div class="roteiro-box">
+                    <audio id="resultAudio" controls style="width: 100%; margin-bottom: 12px;"></audio>
+                    <button class="btn-primary" onclick="generateAudio()">🔊 Gerar Narração com IA</button>
+                </div>
+            </div>
+
+            <div id="canvasTab" class="result-content">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <canvas id="previewCanvas" width="400" height="300" style="border: 1px solid #2A2060; border-radius: 12px; width: 100%; height: auto; background: #111428;"></canvas>
+                </div>
+                <select id="themeSelect" style="margin-bottom: 12px;">
+                    <option value="animated">🎨 Animado</option>
+                    <option value="gradient">🌈 Gradiente</option>
+                    <option value="particles">✨ Partículas</option>
+                    <option value="wave">〰️ Onda</option>
+                    <option value="minimal">◆ Minimalista</option>
+                </select>
+                <button class="btn-primary" onclick="launchVideoStudio()">🎬 Ir para Estúdio de Vídeo</button>
+            </div>
+
+            <button class="btn-secondary" onclick="switchScreen('homeScreen')" style="margin-top: 20px;">← Voltar</button>
+        </div>
+
+        <!-- PROJECTS SCREEN -->
+        <div id="projectsScreen" class="screen fade-in">
+            <div class="header">
+                <span class="header-back" onclick="switchScreen('homeScreen')">←</span>
+                <h2>Meus Projetos</h2>
+                <span style="font-size: 12px; color: #7B61FF;">3 projetos</span>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                <div class="chip active">Todos</div>
+                <div class="chip">Curtidos</div>
+                <div class="chip">Recentes</div>
+            </div>
+
+            <div id="projectsList"></div>
+        </div>
+
+        <!-- CREDITS SCREEN -->
+        <div id="creditsScreen" class="screen fade-in">
+            <div class="header">
+                <span class="header-back" onclick="switchScreen('homeScreen')">←</span>
+                <h2>Créditos</h2>
+                <span style="font-size: 12px; color: #7B61FF;">10 créditos</span>
+            </div>
+
+            <div class="card" style="background: radial-gradient(circle at top right, #1A1548, #0F1330); border: 1px solid #3D2E9E; margin-bottom: 20px; text-align: center;">
+                <div style="font-size: 48px; margin-bottom: 12px;">💎</div>
+                <p style="font-size: 12px; color: #8878C0;">Seus Créditos</p>
+                <p style="font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 900; margin: 8px 0;">10</p>
+                <p style="font-size: 11px; color: #8878C0;">créditos disponíveis</p>
+            </div>
+
+            <p class="section-title">Precisas de mais créditos?</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="card" style="cursor: pointer;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="font-weight: 700; font-size: 14px;">50 Créditos</p>
+                            <p style="font-size: 12px; color: #8878C0; margin-top: 4px;">Pacote básico para começar</p>
+                        </div>
+                        <p style="font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #7B61FF;">💜 50</p>
+                    </div>
+                </div>
+
+                <div class="card" style="cursor: pointer; border: 1.5px solid #7B61FF; background: #1A1548;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="font-weight: 700; font-size: 14px;">100 Créditos <span style="background: #22C55E; color: #080B1A; padding: 2px 8px; border-radius: 6px; font-size: 10px; margin-left: 4px;">-20%</span></p>
+                            <p style="font-size: 12px; color: #8878C0; margin-top: 4px;">Mais popular</p>
+                        </div>
+                        <p style="font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #7B61FF;">💜 80</p>
+                    </div>
+                </div>
+
+                <div class="card" style="cursor: pointer;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="font-weight: 700; font-size: 14px;">500 Créditos</p>
+                            <p style="font-size: 12px; color: #8878C0; margin-top: 4px;">Melhor custo-benefício</p>
+                        </div>
+                        <p style="font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: 700; color: #7B61FF;">💜 300</p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="section-title">Histórico de uso</p>
+            <div class="card">
+                <p style="font-size: 12px; color: #8878C0;">Projeto gerado</p>
+                <p style="font-weight: 700;">1 crédito</p>
+                <p style="font-size: 11px; color: #3A3060; margin-top: 4px;">Há 1 dia</p>
+            </div>
+        </div>
+
+        <!-- PROFILE SCREEN -->
+        <div id="profileScreen" class="screen fade-in">
+            <div class="header">
+                <span class="header-back" onclick="switchScreen('homeScreen')">←</span>
+                <h2>Perfil</h2>
+            </div>
+
+            <div class="card" style="text-align: center; margin-bottom: 20px;">
+                <div style="width: 60px; height: 60px; border-radius: 50%; background: #1A1548; border: 2px solid #3D2E9E; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 12px;">👤</div>
+                <p style="font-weight: 700; font-size: 16px;">Usuário Visitante</p>
+                <p style="font-size: 12px; color: #8878C0; margin-top: 4px;">visitante@primevideo.ia</p>
+            </div>
+
+            <p class="section-title">Configurações</p>
+            <div class="card" style="margin-bottom: 12px;">
+                <p style="font-weight: 700; margin-bottom: 8px;">Idioma</p>
+                <select style="background: #111428; border: 1.5px solid #2A2060;">
+                    <option>🇧🇷 Português (Brasil)</option>
+                    <option>🇺🇸 English (USA)</option>
+                    <option>🇪🇸 Español</option>
+                </select>
+            </div>
+
+            <button class="btn-secondary" onclick="logout()">🚪 Sair da Conta</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="nav-tab active" onclick="switchScreen('homeScreen')">
+            <span class="nav-icon">⌂</span>
+            <span class="nav-label">Início</span>
+        </div>
+        <div class="nav-tab" onclick="switchScreen('projectsScreen')">
+            <span class="nav-icon">◫</span>
+            <span class="nav-label">Projetos</span>
+        </div>
+        <div class="nav-fab" onclick="switchScreen('createScreen')">+</div>
+        <div class="nav-tab" onclick="switchScreen('creditsScreen')">
+            <span class="nav-icon">💎</span>
+            <span class="nav-label">Créditos</span>
+        </div>
+        <div class="nav-tab" onclick="switchScreen('profileScreen')">
+            <span class="nav-icon">◉</span>
+            <span class="nav-label">Perfil</span>
+        </div>
+    </div>
+
+    <script>
+        // STATE
+        let appState = {
+            user: null,
+            credits: 10,
+            currentScreen: 'login',
+            selectedCategory: null,
+            selectedPlatform: null,
+            selectedDuration: 30,
+            selectedLang: 'pt-BR',
+            creativity: 60,
+            projects: [
+                { id: 1, title: "Os Mistérios de Vênus", category: "Espaço", duration: 45, platform: "Shorts", date: "30/05/2025", emoji: "🪐", color: "#2D1F7A" },
+                { id: 2, title: "A Baleia Azul Gigante", category: "Animais", duration: 50, platform: "TikTok", date: "29/05/2025", emoji: "🐋", color: "#1A3060" },
+                { id: 3, title: "Como os Vulcões Nascem", category: "Natureza", duration: 40, platform: "Reels", date: "28/05/2025", emoji: "🌋", color: "#3D1A1A" },
+            ],
+            generatedResult: null
+        };
+
+        // CATEGORIAS COM EMOJIS
+        const CATEGORIES = {
+            "Natureza": "🌍",
+            "Espaço": "🪐",
+            "Animais": "🦁",
+            "Tecnologia": "💻",
+            "História": "📚",
+            "Ciência": "🔬",
+            "Oceanos": "🌊",
+            "Geografia": "🗺️",
+            "Corpo Humano": "🫀"
+        };
+
+        // TEMPLATES DE ROTEIRO POR CATEGORIA
+        const ROTEIRO_TEMPLATES = {
+            "Natureza": {
+                title: "A Beleza Intocada da Natureza",
+                roteiro: `[ABERTURA 0-5s]
+Você já parou para pensar na incrível diversidade da natureza ao nosso redor?
+Desde as montanhas mais altas até as florestas mais densas...
+
+[DESENVOLVIMENTO 5-20s]
+Cada ecossistema possui sua própria história fascinante.
+As paisagens selvagens moldam não apenas a vida dos animais, mas também influenciam o nosso próprio planeta.
+Vimos mudanças significativas nos últimos anos...
+
+[CLÍMAX 20-25s]
+A natureza é resiliente, mas precisa de nossa ajuda para prosperar.
+
+[ENCERRAMENTO 25-30s]
+Juntos, podemos fazer a diferença. Preserve a natureza! 🌍`
+            },
+            "Espaço": {
+                title: "Os Mistérios do Universo",
+                roteiro: `[ABERTURA 0-5s]
+O universo é vasto e infinito, cheio de mistérios ainda não desvendados.
+Bilhões de galáxias flutuam no espaço...
+
+[DESENVOLVIMENTO 5-20s]
+Planetas com atmosferas exóticas, buracos negros, e fenômenos cósmicos incríveis.
+Os cientistas trabalham todos os dias para entender esses segredos.
+Cada descoberta nos aproxima de respostas que buscamos há séculos...
+
+[CLÍMAX 20-25s]
+Estamos apenas começando a explorar!
+
+[ENCERRAMENTO 25-30s]
+O universo nos chama para explorar e aprender. Vamos juntos! 🚀`
+            },
+            "Animais": {
+                title: "O Reino Animal Fascinante",
+                roteiro: `[ABERTURA 0-5s]
+Animais incríveis habitam nosso planeta em todas as formas e tamanhos.
+Cada um possui habilidades e características únicas...
+
+[DESENVOLVIMENTO 5-20s]
+Das menores formigas aos maiores baleias.
+Predadores ágeis, herbívoros pacíficos e criaturas marinhas misteriosas.
+Todos eles desempenham papéis vitais no equilíbrio da natureza...
+
+[CLÍMAX 20-25s]
+A vida animal é um espetáculo de adaptação e sobrevivência.
+
+[ENCERRAMENTO 25-30s]
+Respeitar e proteger os animais é proteger nosso futuro! 🦁`
+            },
+            "Tecnologia": {
+                title: "Inovação que Transforma o Mundo",
+                roteiro: `[ABERTURA 0-5s]
+A tecnologia evolui a cada segundo, mudando a forma como vivemos.
+Do smartphone até a inteligência artificial...
+
+[DESENVOLVIMENTO 5-20s]
+Innovações que pareciam impossíveis estão se tornando realidade.
+Computadores quânticos, realidade virtual, e máquinas autônomas.
+A tecnologia conecta bilhões de pessoas ao redor do mundo...
+
+[CLÍMAX 20-25s]
+O futuro está sendo construído agora!
+
+[ENCERRAMENTO 25-30s]
+Abraçar a tecnologia é abraçar o progresso. Bem-vindo ao futuro! 🚀`
+            },
+            "História": {
+                title: "Lições do Passado para o Futuro",
+                roteiro: `[ABERTURA 0-5s]
+A história nos ensina lições valiosas sobre humanidade.
+Impérios, revoluções e mudanças que moldaram o mundo...
+
+[DESENVOLVIMENTO 5-20s]
+Cada era deixou seu legado e influencia nossos dias.
+Desde antigas civilizações até eventos modernos.
+Entender o passado nos ajuda a construir um futuro melhor...
+
+[CLÍMAX 20-25s]
+A história é nosso melhor professor.
+
+[ENCERRAMENTO 25-30s]
+Conheça sua história e inspire-se a fazer diferença! 📚`
+            },
+            "Ciência": {
+                title: "Descobertas que Mudam Tudo",
+                roteiro: `[ABERTURA 0-5s]
+A ciência é a busca pela verdade através da observação e experimentação.
+Cada descoberta abre novas possibilidades...
+
+[DESENVOLVIMENTO 5-20s]
+Desde a física até a biologia, avanços científicos transformam sociedades.
+Medicinas que salvam vidas, tecnologias limpas, e conhecimento infinito.
+Os cientistas dedicam suas vidas a desvendar os segredos do universo...
+
+[CLÍMAX 20-25s]
+A ciência é esperança e progresso.
+
+[ENCERRAMENTO 25-30s]
+Acredite na ciência, acredite no futuro! 🔬`
+            },
+            "Oceanos": {
+                title: "Os Segredos do Fundo do Mar",
+                roteiro: `[ABERTURA 0-5s]
+O oceano cobre 70% do nosso planeta, mas ainda é um grande mistério.
+Profundidades inimagináveis cheias de vida estranha...
+
+[DESENVOLVIMENTO 5-20s]
+Criaturas bioluminescentes, corais coloridos e predadores antigos.
+Os oceanos regulam nosso clima e alimentam bilhões de pessoas.
+Mas estão sob ameaça e precisam de proteção...
+
+[CLÍMAX 20-25s]
+Os oceanos são o coração do nosso planeta.
+
+[ENCERRAMENTO 25-30s]
+Proteja os oceanos, proteja a vida! 🌊`
+            },
+            "Geografia": {
+                title: "Um Mundo de Diversidade",
+                roteiro: `[ABERTURA 0-5s]
+Nosso planeta é um mosaico de culturas, paisagens e pessoas.
+Cada região com sua própria identidade e beleza...
+
+[DESENVOLVIMENTO 5-20s]
+Desertos ardentes, montanhas nevadas, florestas exuberantes.
+Cidades vibrantes e vilarejos acolhedores.
+A geografia molda não apenas o terreno, mas também as sociedades...
+
+[CLÍMAX 20-25s]
+O mundo é maior e mais bonito do que imaginamos.
+
+[ENCERRAMENTO 25-30s]
+Explore, aprenda e se conecte com o mundo! 🗺️`
+            },
+            "Corpo Humano": {
+                title: "A Máquina Mais Perfeita",
+                roteiro: `[ABERTURA 0-5s]
+O corpo humano é uma máquina perfeita de complexidade infinita.
+Bilhões de células trabalhando em harmonia...
+
+[DESENVOLVIMENTO 5-20s]
+De nosso coração batendo até nosso cérebro pensando.
+Ossos fortes, músculos poderosos e sistemas inteligentes.
+Cada parte trabalha para mantê-lo vivo e saudável...
+
+[CLÍMAX 20-25s]
+Somos verdadeiramente milagres da natureza.
+
+[ENCERRAMENTO 25-30s]
+Cuide do seu corpo, ele é seu melhor ativo! 🫀`
+            }
+        };
+
+        // FUNCTIONS
+        function switchScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenName).classList.add('active');
+            appState.currentScreen = screenName;
+            updateNav();
+            if (screenName === 'homeScreen') renderHome();
+            if (screenName === 'projectsScreen') renderProjects();
+            if (screenName === 'createScreen') renderCreate();
+        }
+
+        function updateNav() {
+            document.querySelectorAll('.nav-tab').forEach((t, i) => {
+                t.classList.remove('active');
+                if ((i === 0 && appState.currentScreen === 'homeScreen') ||
+                    (i === 1 && appState.currentScreen === 'projectsScreen') ||
+                    (i === 3 && appState.currentScreen === 'creditsScreen') ||
+                    (i === 4 && appState.currentScreen === 'profileScreen')) {
+                    t.classList.add('active');
+                }
+            });
+        }
+
+        function loginAsVisitor() {
+            appState.user = { name: "Usuário" };
+            switchScreen('homeScreen');
+        }
+
+        function loginWithGoogle() {
+            appState.user = { name: "Usuário" };
+            switchScreen('homeScreen');
+        }
+
+        function renderHome() {
+            document.getElementById('userName').textContent = appState.user?.name || 'Usuário';
+            document.getElementById('creditsDisplay').textContent = appState.credits;
+            document.getElementById('createCredits').textContent = appState.credits;
+            
+            const recents = appState.projects.slice(0, 3).map(p => `
+                <div class="project-card">
+                    <div class="project-emoji" style="background: ${p.color}">${p.emoji}</div>
+                    <div class="project-info">
+                        <div class="project-title">${p.title}</div>
+                        <div class="project-meta">${p.category} • ${p.duration}s • ${p.platform}</div>
+                        <div class="project-meta">${p.date}</div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('recentProjects').innerHTML = recents;
+        }
+
+        function renderCreate() {
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = Object.entries(CATEGORIES).map(([name, emoji]) => `
+                <div class="category-item" data-category="${name}" onclick="selectCategory(this)">
+                    <div class="category-item-emoji">${emoji}</div>
+                    <div class="category-item-name">${name}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderProjects() {
+            const list = document.getElementById('projectsList');
+            list.innerHTML = appState.projects.map(p => `
+                <div class="project-card">
+                    <div class="project-emoji" style="background: ${p.color}">${p.emoji}</div>
+                    <div class="project-info">
+                        <div class="project-title">${p.title}</div>
+                        <div class="project-meta">${p.category} • ${p.duration}s • ${p.platform}</div>
+                        <div class="project-meta">${p.date}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectCategory(el) {
+            document.querySelectorAll('.category-item').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            appState.selectedCategory = el.dataset.category;
+        }
+
+        function selectPlatform(el) {
+            document.querySelectorAll('[data-platform]').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            appState.selectedPlatform = el.dataset.platform;
+        }
+
+        function selectDuration(el) {
+            document.querySelectorAll('[data-duration]').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            appState.selectedDuration = parseInt(el.dataset.duration);
+        }
+
+        function selectLang(el) {
+            document.querySelectorAll('[data-lang]').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            appState.selectedLang = el.dataset.lang;
+        }
+
+        function updateCreativity(val) {
+            document.getElementById('creativityLabel').textContent = val < 50 ? 'Equilibrado' : val < 80 ? 'Criativo' : 'Muito Criativo';
+            appState.creativity = val;
+        }
+
+        async function generateProject() {
+            if (!appState.selectedCategory) {
+                alert('Por favor selecione uma categoria!');
+                return;
+            }
+
+            if (appState.credits < 1) {
+                alert('Créditos insuficientes!');
+                return;
+            }
+
+            switchScreen('loadingScreen');
+            
+            // Simular geração da IA
+            await new Promise(r => setTimeout(r, 2500));
+
+            // Gerar resultado
+            const template = ROTEIRO_TEMPLATES[appState.selectedCategory];
+            const emoji = CATEGORIES[appState.selectedCategory];
+            
+            appState.generatedResult = {
+                title: template.title,
+                category: appState.selectedCategory,
+                emoji: emoji,
+                roteiro: template.roteiro,
+                platform: appState.selectedPlatform || 'Shorts',
+                duration: appState.selectedDuration,
+                lang: appState.selectedLang
+            };
+
+            appState.credits -= 1;
+            document.getElementById('creditsDisplay').textContent = appState.credits;
+
+            switchScreen('resultScreen');
+            renderResult();
+        }
+
+        function renderResult() {
+            const result = appState.generatedResult;
+            document.getElementById('resultEmoji').textContent = result.emoji;
+            document.getElementById('resultTitle').textContent = result.title;
+            document.getElementById('resultCategory').textContent = `${result.category} • ${result.duration}s • ${result.platform}`;
+            document.getElementById('roteiroContent').textContent = result.roteiro;
+        }
+
+        function switchResultTab(tab) {
+            document.querySelectorAll('.result-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.result-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function copyToClipboard() {
+            const text = appState.generatedResult.roteiro;
+            navigator.clipboard.writeText(text).then(() => alert('✅ Roteiro copiado!'));
+        }
+
+        async function generateAudio() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '⏳ Gerando...';
+
+            await new Promise(r => setTimeout(r, 2000));
+
+            const utterance = new SpeechSynthesisUtterance(appState.generatedResult.roteiro);
+            utterance.lang = appState.selectedLang;
+            utterance.rate = 1;
+
+            window.speechSynthesis.speak(utterance);
+            btn.disabled = false;
+            btn.textContent = '🔊 Gerar Narração com IA';
+        }
+
+        function launchVideoStudio() {
+            // Redirecionar para o canvas-video-recorder com os dados
+            const params = new URLSearchParams({
+                roteiro: appState.generatedResult.roteiro,
+                categoria: appState.generatedResult.category,
+                duracao: appState.generatedResult.duration
+            });
+            window.location.href = 'canvas-video-recorder.html?' + params.toString();
+        }
+
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                appState.user = null;
+                appState.currentScreen = 'login';
+                switchScreen('loginScreen');
+            }
+        }
+
+        // INIT
+        document.addEventListener('DOMContentLoaded', () => {
+            switchScreen('loginScreen');
+        });
+    </script>
+</body>
+</html>
